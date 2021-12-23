@@ -141,7 +141,7 @@ bool TetrisLayer::moveBlock(int key)
         }
     }
     
-    drawRect(curBlock.getPositionX(), curBlock.getPositionY());
+    drawSprite(curBlock.getPositionX(), curBlock.getPositionY());
     return true;
 }
 
@@ -165,7 +165,7 @@ void TetrisLayer::clearBlock(int x, int y)
             if(block[curBlock.getRotationCount()][xidx - x][yidx - y] >= 1)
             {
                 board[xidx][yidx] = 0;
-                drawRect(xidx, yidx);
+                drawSprite(xidx, yidx);
             }
         }
     }
@@ -184,7 +184,7 @@ void TetrisLayer::drawBlock()
             if(block[curBlock.getRotationCount()][xidx - x][yidx - y] >= 1)
             {
                 board[xidx][yidx] = block[curBlock.getRotationCount()][xidx - x][yidx - y];
-                drawRect(xidx, yidx);
+                drawSprite(xidx, yidx);
             }
         }
     }
@@ -196,47 +196,47 @@ void TetrisLayer::drawBoard()
     {
         for(int y = 0; y < 12; ++y)
         {
-            drawRect(x, y);
+            drawSprite(x, y);
         }
     }
 }
 
-void TetrisLayer::drawRect(int x, int y)
+void TetrisLayer::drawSprite(int x, int y)
 {
-    auto rectNode = DrawNode::create();
-    Vec2 rectangle[4];
-    rectangle[0] = Vec2(y * 40 + border, (22 - x) * 40 - border);
-    rectangle[1] = Vec2((y + 1) * 40 - border, (22 - x) * 40 - border);
-    rectangle[2] = Vec2((y + 1) * 40 - border, (21 - x) * 40 + border);
-    rectangle[3] = Vec2(y * 40 + border, (21 - x) * 40 + border);
-    
-    Color4F color = Color4F(1, 1, 1, 1);
+    Sprite* sprite = Sprite::create("square_white.png");
     switch(board[x][y])
     {
         case 1:
-            color = Color4F(0, 1, 0, 1);
+            sprite = Sprite::create("square_red.png");
             break;
         case 2:
-            color = Color4F(1, 0, 0, 1);
+            sprite = Sprite::create("square_blue.png");
             break;
         case 3:
-            color = Color4F(0, 0, 1, 1);
+            sprite = Sprite::create("square_green.png");
             break;
         case 4:
-            color = Color4F(1, 1, 0, 1);
+            sprite = Sprite::create("square_pink.png");
             break;
         case 5:
-            color = Color4F(0, 1, 1, 1);
+            sprite = Sprite::create("square_sky.png");
             break;
         case 6:
-            color = Color4F(1, 0, 1, 1);
+            sprite = Sprite::create("square_yellow.png");
             break;
         case 7:
-            color = Color4F(0.5, 0.5, 0.5, 1);
+            sprite = Sprite::create("square_gray.png");
             break;
     }
-    rectNode->drawPolygon(rectangle, 4, color, 1, color);
-    this->addChild(rectNode);
+    
+    int originWidth = sprite->getContentSize().width;
+    int originHeight = sprite->getContentSize().height;
+    sprite->setScale((double)Constant::blockSize / (double)originWidth, (double)Constant::blockSize / (double)originHeight);
+    sprite->setAnchorPoint(Vec2(0, 0));
+    sprite->setPosition(Vec2(y * Constant::blockSize + Constant::blockGap,
+                             (Constant::mapHeight - x) * Constant::blockSize + Constant::blockGap));
+    this->addChild(sprite);
+//    delete sprite; error
 }
 
 void TetrisLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)

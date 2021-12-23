@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cocos2d.h"
+
 #include "Block.h"
 
 class TetrisLayer : public cocos2d::Layer
@@ -18,7 +19,7 @@ public:
     void gameEnd();
     
     void drawBlock();
-    void drawRect(int x, int y);
+    void drawSprite(int x, int y);
     void drawBoard();
     void addBlock();
     void clearBlock(int x, int y);
