@@ -56,11 +56,10 @@ void TetrisLayer::gameStart()
 
 void TetrisLayer::update(float dt)
 {
-//    CCLOG("update start");
     _time -= dt;
     
-    auto backupX = 0;
-    auto backupY = 0;
+    int backupX = 0;
+    int backupY = 0;
 
     if(isCurBlock == false)
     {
@@ -88,7 +87,6 @@ void TetrisLayer::update(float dt)
     {
         TetrisLayer::gameEnd();
     }
-//    CCLOG("update end");
 }
 
 void TetrisLayer::gameEnd()
@@ -106,7 +104,7 @@ void TetrisLayer::addBlock()
 bool TetrisLayer::moveBlock(int key)
 {
     TetrisLayer::clearBlock(curBlock.getPositionX(), curBlock.getPositionY());
-    auto block = curBlock.getBlock();
+    arrPt block = curBlock.getBlock();
     
     if(key == down)
     {
@@ -154,6 +152,7 @@ bool TetrisLayer::moveBlock(int key)
 void TetrisLayer::rotateBlock() // rotation이 아니라 shape가 변함
 {
     clearBlock(curBlock.getPositionX(), curBlock.getPositionY());
+    // 회전실패하면 회전 안 되게 해야하면 백업 rotationCounter가 필요
     curBlock.rotate();
     // FIXME 충돌 확인, 충돌하면 좌 또는 우로 이동 (아래, 위로도 이동해야할 때가 있을지도 -> 회전실패로 간주?)
     drawBlock();
@@ -161,7 +160,7 @@ void TetrisLayer::rotateBlock() // rotation이 아니라 shape가 변함
 
 void TetrisLayer::clearBlock(int x, int y)
 {
-    auto block = curBlock.getBlock();
+    arrPt block = curBlock.getBlock();
     
     for(int xidx = x; xidx < x + 4; ++xidx)
     {
@@ -178,9 +177,9 @@ void TetrisLayer::clearBlock(int x, int y)
 
 void TetrisLayer::drawBlock()
 {
-    auto x = curBlock.getPositionX();
-    auto y = curBlock.getPositionY();
-    auto block = curBlock.getBlock();
+    int x = curBlock.getPositionX();
+    int y = curBlock.getPositionY();
+    arrPt block = curBlock.getBlock();
     
     for(int xidx = x; xidx < x + 4; ++xidx)
     {
