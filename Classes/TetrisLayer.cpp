@@ -113,7 +113,92 @@ bool TetrisLayer::moveBlock(int key)
     else if(key == Constant::right)
     {
         curBlock.goRight();
+    } else if(key == Constant::up)
+    {
+        curBlock.goUp();
     }
+    
+    int check = checkCollision();
+    switch(check)
+    {
+        case Constant::collision_no:
+            drawSprite(curBlock.getPositionX(), curBlock.getPositionY());
+            return true;
+        case Constant::collision_ground:
+            isCurBlock = false; // 다른 곳에서 하기
+        case Constant::collision_lwall:
+        case Constant::collision_rwall:
+            return false;
+        case Constant::collision_block:
+            if(key == Constant::down) // 내려가서 겹친 경우 해당 블록 움직임 종료 -> 여기서 말고 다른 곳에서
+            {
+                isCurBlock = false;
+            }
+            return false;
+        case Constant::collision_error: // FIXME error 처리
+        default:
+            return false; // FIXME, 여기에 걸리는 상황이 오면 안 됨, error 처리?
+    }
+}
+
+void TetrisLayer::rotateBlock() // rotation이 아니라 shape가 변함
+{
+    clearBlock(curBlock.getPositionX(), curBlock.getPositionY());
+    // 회전실패하면 회전 안 되게 해야하면 백업 rotationCounter가 필요 -> 최대 3칸 이동해보고 안 되면 실패
+    int backupRotation = curBlock.getRotationCount();
+    int backupX = curBlock.getPositionX();
+    int backupY = curBlock.getPositionY();
+    
+    curBlock.rotate();
+    // FIXME 충돌 확인, 충돌하면 좌 또는 우로 이동 (아래, 위로도 이동해야할 때가 있을지도 -> 회전실패로 간주?)
+    arrPt block = curBlock.getBlock();
+    
+    bool successRotation = false;
+    for(int idx = 0; idx < 3; ++idx) // 최대 3칸 이동해보고 불가능하면 회전 실패로 간주
+    {
+        int check = checkCollision();
+        switch(check)
+        {
+            case Constant::collision_no:
+                successRotation = true;
+                break; // 충돌 없음 회전 성공
+            case Constant::collision_ground:
+                curBlock.goUp();
+                break;
+            case Constant::collision_lwall:
+                curBlock.goRight();
+                break;
+            case Constant::collision_rwall:
+                curBlock.goLeft();
+                break;
+            case Constant::collision_block:
+                // FIXME 추가해야함.. 어떻게 할까
+                break;
+            case Constant::collision_error:
+                break; // FIXME error 처리
+            default:
+                break; // FIXME, 여기에 걸리는 상황이 오면 안 됨, error 처리?
+        }
+        
+        if(successRotation)
+            break;
+    }
+    
+    if(successRotation == false)
+    {
+        curBlock.setPositionX(backupX);
+        curBlock.setPositionY(backupY);
+        curBlock.setRotationCount(backupRotation);
+    }
+    drawBlock();
+}
+
+int TetrisLayer::checkCollision()
+{
+    if(isCurBlock == false)
+        return Constant::collision_error;
+    
+    arrPt block = curBlock.getBlock();
     
     for(int xidx = 0; xidx < 4; ++xidx)
     {
@@ -121,37 +206,17 @@ bool TetrisLayer::moveBlock(int key)
         {
             if(block[curBlock.getRotationCount()][xidx][yidx] <= 0) // 빈 공간이면 다음 칸 체크
                 continue;
-            if(xidx + curBlock.getPositionX() > 21) // 바닥과 충돌
-            {
-                isCurBlock = false;
-                return false;
-            }
-            if(yidx + curBlock.getPositionY() > 11 || yidx + curBlock.getPositionY() < 0) // 벽면 충돌
-            {
-                return false;
-            }
+            if(xidx + curBlock.getPositionX() > Constant::mapHeight - 1) // 바닥과 충돌
+                return Constant::collision_ground;
+            if(yidx + curBlock.getPositionY() > Constant::mapWidth - 1) // 벽면 충돌
+                return Constant::collision_rwall;
+            if(yidx + curBlock.getPositionY() < 0)
+                return Constant::collision_lwall;
             if(board[xidx + curBlock.getPositionX()][yidx + curBlock.getPositionY()] >= 1) // 다른 블록과 겹친 상태, 이동 불가
-            {
-                if(key == Constant::down) // 내려가서 겹친 경우 해당 블록 움직임 종료
-                {
-                    isCurBlock = false;
-                }
-                return false;
-            }
+                return Constant::collision_block;
         }
     }
-    
-    drawSprite(curBlock.getPositionX(), curBlock.getPositionY());
-    return true;
-}
-
-void TetrisLayer::rotateBlock() // rotation이 아니라 shape가 변함
-{
-    clearBlock(curBlock.getPositionX(), curBlock.getPositionY());
-    // 회전실패하면 회전 안 되게 해야하면 백업 rotationCounter가 필요
-    curBlock.rotate();
-    // FIXME 충돌 확인, 충돌하면 좌 또는 우로 이동 (아래, 위로도 이동해야할 때가 있을지도 -> 회전실패로 간주?)
-    drawBlock();
+    return Constant::collision_no;
 }
 
 void TetrisLayer::clearBlock(int x, int y)

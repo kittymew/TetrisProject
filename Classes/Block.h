@@ -18,10 +18,12 @@ public:
     int getPositionY();
     void rotate();
     void goDown();
+    void goUp();
     void goLeft();
     void goRight();
     void setPositionX(int _x);
     void setPositionY(int _y);
+    void setRotationCount(int _rotation);
     void setBlock(int shape);
 
 public:

@@ -25,6 +25,7 @@ public:
     void clearBlock(int x, int y);
     bool moveBlock(int key);
     void rotateBlock();
+    int checkCollision();
     
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
     

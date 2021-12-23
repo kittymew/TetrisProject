@@ -13,4 +13,11 @@ namespace Constant
     const int mapHeight = 22;
     const int blockSize = 40;
     const int blockGap = 10;
+
+    const int collision_no = 0;
+    const int collision_ground = 1;
+    const int collision_lwall = 2;
+    const int collision_rwall = 3;
+    const int collision_block = 4;
+    const int collision_error = -1; // 체크해야할 curBlock이 없다거나 등등
 }

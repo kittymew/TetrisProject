@@ -31,6 +31,11 @@ void Block::goDown()
     ++x;
 }
 
+void Block::goUp()
+{
+    --x;
+}
+
 void Block::goLeft()
 {
     --y;
@@ -49,6 +54,11 @@ void Block::setPositionX(int _x)
 void Block::setPositionY(int _y)
 {
     y = _y;
+}
+
+void Block::setRotationCount(int _rotation)
+{
+    rotationCount = _rotation;
 }
 
 void Block::setBlock(int shape)
