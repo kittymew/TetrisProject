@@ -26,6 +26,7 @@ public:
     bool moveBlock(int key);
     void rotateBlock();
     int checkCollision();
+    int getDirectionMaxCollision(); // 회전시 블록간 충돌을 위한 함수
     
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
     

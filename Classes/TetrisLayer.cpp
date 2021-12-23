@@ -130,7 +130,7 @@ bool TetrisLayer::moveBlock(int key)
         case Constant::collision_rwall:
             return false;
         case Constant::collision_block:
-            if(key == Constant::down) // 내려가서 겹친 경우 해당 블록 움직임 종료 -> 여기서 말고 다른 곳에서
+            if(key == Constant::down) // 내려가서 겹친 경우 해당 블록 움직임 종료 -> 여기 말고 다른 곳에서
             {
                 isCurBlock = false;
             }
@@ -141,16 +141,15 @@ bool TetrisLayer::moveBlock(int key)
     }
 }
 
-void TetrisLayer::rotateBlock() // rotation이 아니라 shape가 변함
+void TetrisLayer::rotateBlock()
 {
     clearBlock(curBlock.getPositionX(), curBlock.getPositionY());
-    // 회전실패하면 회전 안 되게 해야하면 백업 rotationCounter가 필요 -> 최대 3칸 이동해보고 안 되면 실패
     int backupRotation = curBlock.getRotationCount();
     int backupX = curBlock.getPositionX();
     int backupY = curBlock.getPositionY();
     
     curBlock.rotate();
-    // FIXME 충돌 확인, 충돌하면 좌 또는 우로 이동 (아래, 위로도 이동해야할 때가 있을지도 -> 회전실패로 간주?)
+    
     arrPt block = curBlock.getBlock();
     
     bool successRotation = false;
@@ -172,8 +171,22 @@ void TetrisLayer::rotateBlock() // rotation이 아니라 shape가 변함
                 curBlock.goLeft();
                 break;
             case Constant::collision_block:
-                // FIXME 추가해야함.. 어떻게 할까
+            {
+                int direction = getDirectionMaxCollision();
+                if(direction == Constant::left)
+                {
+                    curBlock.goLeft();
+                }
+                else if(direction == Constant::right)
+                {
+                    curBlock.goRight();
+                }
+                else if(direction == Constant::up)
+                {
+                    curBlock.goUp();
+                }
                 break;
+            }
             case Constant::collision_error:
                 break; // FIXME error 처리
             default:
@@ -191,6 +204,65 @@ void TetrisLayer::rotateBlock() // rotation이 아니라 shape가 변함
         curBlock.setRotationCount(backupRotation);
     }
     drawBlock();
+}
+
+int TetrisLayer::getDirectionMaxCollision()
+{
+    // 블록배열 (4, 4)에서 가운데 지점을 기준으로 4 구역으로 나눠 각 구역의 충돌 개수 계산
+    // 좌표계로 생각하면 영점 기준으로 1, 2 사분면을 위 구역
+    // 3, 4사분면은 아래 / 1, 4 사분면은 왼쪽 / 2, 3 사분면은 오른쪽 구역으로 계산해 이동 방향 리턴(가장 충돌을 피할 수 있는 방향)
+    // -> 회전하면서 아래로 이동하는 것은 어색하여 아래 구역이 많을 때 위를 반환하는 것으로 변경
+    if(isCurBlock == false)
+        return Constant::collision_error;
+    
+    arrPt block = curBlock.getBlock();
+    int collisionCountWithArea[4] = {0, 0, 0, 0}; // 1, 2, 3, 4 사분면
+    
+    for(int xidx = 0; xidx < 4; ++xidx)
+    {
+        for(int yidx = 0; yidx < 4; ++yidx)
+        {
+            if(block[curBlock.getRotationCount()][xidx][yidx] <= 0) // 빈 공간이면 다음 칸 체크
+                continue;
+            if(board[xidx + curBlock.getPositionX()][yidx + curBlock.getPositionY()] >= 1) // 다른 블록과 충돌
+            {
+                if(xidx <= 1)
+                {
+                    ++collisionCountWithArea[0];
+                    ++collisionCountWithArea[1];
+                }
+                else
+                {
+                    ++collisionCountWithArea[2];
+                    ++collisionCountWithArea[3];
+                }
+                
+                if(yidx <= 1)
+                {
+                    ++collisionCountWithArea[1];
+                    ++collisionCountWithArea[2];
+                }
+                else
+                {
+                    ++collisionCountWithArea[0];
+                    ++collisionCountWithArea[3];
+                }
+            }
+        }
+    }
+    
+    int areaUpCount = collisionCountWithArea[0] + collisionCountWithArea[1];
+    int areaLeftCount = collisionCountWithArea[1] + collisionCountWithArea[2];
+    int areaRightCount = collisionCountWithArea[0] + collisionCountWithArea[3];
+    int areaDownCount = collisionCountWithArea[2] + collisionCountWithArea[3];
+    
+    if(areaUpCount > areaLeftCount && areaUpCount > areaRightCount)
+        return Constant::up;
+    if(areaDownCount > areaLeftCount && areaDownCount > areaRightCount)
+        return Constant::up;
+    if(areaLeftCount > areaRightCount)
+        return Constant::right;
+    return Constant::left;
 }
 
 int TetrisLayer::checkCollision()
@@ -212,7 +284,7 @@ int TetrisLayer::checkCollision()
                 return Constant::collision_rwall;
             if(yidx + curBlock.getPositionY() < 0)
                 return Constant::collision_lwall;
-            if(board[xidx + curBlock.getPositionX()][yidx + curBlock.getPositionY()] >= 1) // 다른 블록과 겹친 상태, 이동 불가
+            if(board[xidx + curBlock.getPositionX()][yidx + curBlock.getPositionY()] >= 1) // 다른 블록과 겹친 상태
                 return Constant::collision_block;
         }
     }
