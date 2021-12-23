@@ -207,25 +207,25 @@ void TetrisLayer::drawSprite(int x, int y)
     switch(board[x][y])
     {
         case 1:
-            sprite = Sprite::create("square_red.png");
+            sprite->setTexture("square_red.png");
             break;
         case 2:
-            sprite = Sprite::create("square_blue.png");
+            sprite->setTexture("square_blue.png");
             break;
         case 3:
-            sprite = Sprite::create("square_green.png");
+            sprite->setTexture("square_green.png");
             break;
         case 4:
-            sprite = Sprite::create("square_pink.png");
+            sprite->setTexture("square_pink.png");
             break;
         case 5:
-            sprite = Sprite::create("square_sky.png");
+            sprite->setTexture("square_sky.png");
             break;
         case 6:
-            sprite = Sprite::create("square_yellow.png");
+            sprite->setTexture("square_yellow.png");
             break;
         case 7:
-            sprite = Sprite::create("square_gray.png");
+            sprite->setTexture("square_gray.png");
             break;
     }
     
@@ -236,7 +236,6 @@ void TetrisLayer::drawSprite(int x, int y)
     sprite->setPosition(Vec2(y * Constant::blockSize + Constant::blockGap,
                              (Constant::mapHeight - x) * Constant::blockSize + Constant::blockGap));
     this->addChild(sprite);
-//    delete sprite; error
 }
 
 void TetrisLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)

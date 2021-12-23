@@ -12,5 +12,5 @@ namespace Constant
     const int mapWidth = 12;
     const int mapHeight = 22;
     const int blockSize = 40;
-    const int blockGap = 5;
+    const int blockGap = 10;
 }
