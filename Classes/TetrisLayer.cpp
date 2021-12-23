@@ -268,6 +268,11 @@ void TetrisLayer::drawBoard()
 
 void TetrisLayer::drawSprite(int x, int y)
 {
+    if(x < 0 || x > Constant::mapHeight - 1)
+        return;
+    if(y < 0 || y > Constant::mapWidth - 1)
+        return;
+    
     Sprite* sprite = Sprite::create("square_white.png");
     switch(board[x][y])
     {
