@@ -21,12 +21,14 @@ public:
     void drawBlock();
     void drawSprite(int x, int y);
     void drawBoard();
-    void addBlock();
     void clearBlock(int x, int y);
+    
+    void addBlock();
     bool moveBlock(int key);
     void rotateBlock();
     int checkCollision();
     int getDirectionMaxCollision(); // 회전시 블록간 충돌을 위한 함수
+    bool isGround();
     
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
     

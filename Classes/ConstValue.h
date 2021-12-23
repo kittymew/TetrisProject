@@ -20,4 +20,6 @@ namespace Constant
     const int collision_rwall = 3;
     const int collision_block = 4;
     const int collision_error = -1; // 체크해야할 curBlock이 없다거나 등등
+
+    const float speedDown = 1.0f;
 }

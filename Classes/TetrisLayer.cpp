@@ -1,3 +1,5 @@
+#include <set>
+
 #include "TetrisLayer.h"
 #include "ConstValue.h"
 
@@ -47,7 +49,7 @@ bool TetrisLayer::init()
 void TetrisLayer::gameStart()
 {
     _time = 1000;
-    schedule(CC_SCHEDULE_SELECTOR(TetrisLayer::update), 1.0f); // 1초마다 호출되는 스케줄러 시작
+    schedule(CC_SCHEDULE_SELECTOR(TetrisLayer::update), Constant::speedDown); // 1초마다 호출되는 스케줄러 시작
 }
 
 void TetrisLayer::update(float dt)
@@ -63,21 +65,26 @@ void TetrisLayer::update(float dt)
     }
     else
     {
-        backupX = curBlock.getPositionX();
-        backupY = curBlock.getPositionY();
-        
-        bool moveDown = TetrisLayer::moveBlock(Constant::down);
-        if(moveDown == false)
+        if(TetrisLayer::isGround())
         {
-            curBlock.setPositionX(backupX);
-            curBlock.setPositionY(backupY);
+            // 줄 완성되었는지 체크
+            // 한칸씩 아래로 내리기
+        }
+        else
+        {
+            backupX = curBlock.getPositionX();
+            backupY = curBlock.getPositionY();
+            
+            bool moveDown = TetrisLayer::moveBlock(Constant::down);
+            if(moveDown == false)
+            {
+                curBlock.setPositionX(backupX);
+                curBlock.setPositionY(backupY);
+            }
         }
     }
     
     TetrisLayer::drawBlock();
-    
-    // 줄 완성되었는지 체크
-    // 한칸씩 아래로 내리기
 
     if(_time <= 0)
     {
@@ -122,18 +129,13 @@ bool TetrisLayer::moveBlock(int key)
     switch(check)
     {
         case Constant::collision_no:
-            drawSprite(curBlock.getPositionX(), curBlock.getPositionY());
+            drawBlock();
             return true;
         case Constant::collision_ground:
-            isCurBlock = false; // 다른 곳에서 하기
         case Constant::collision_lwall:
         case Constant::collision_rwall:
             return false;
         case Constant::collision_block:
-            if(key == Constant::down) // 내려가서 겹친 경우 해당 블록 움직임 종료 -> 여기 말고 다른 곳에서
-            {
-                isCurBlock = false;
-            }
             return false;
         case Constant::collision_error: // FIXME error 처리
         default:
@@ -378,6 +380,36 @@ void TetrisLayer::drawSprite(int x, int y)
     sprite->setPosition(Vec2(y * Constant::blockSize + Constant::blockGap,
                              (Constant::mapHeight - x) * Constant::blockSize + Constant::blockGap));
     this->addChild(sprite);
+}
+
+bool TetrisLayer::isGround()
+{
+    if(isCurBlock == false)
+        return false; // FIXME 이곳에 걸리는 일이 없어야 정상(update 함수에서 확인함), 만약 걸린다면 에러 표시
+    
+    arrPt block = curBlock.getBlock();
+    std::set<int> checkColumns;
+    
+    for(int xidx = 3; xidx >= 0; --xidx) // 아래서부터 탐색
+    {
+        for(int yidx = 0; yidx < 4; ++yidx)
+        {
+            if(checkColumns.find(yidx) != checkColumns.end()) // 이미 검사한 열이라면 다음 칸 체크
+                continue;
+            if(block[curBlock.getRotationCount()][xidx][yidx] <= 0) // 빈 공간이면 다음 칸 체크
+                continue;
+            
+            int nextX = xidx + curBlock.getPositionX() + 1;
+            if((nextX > Constant::mapHeight - 1) || (board[nextX][yidx + curBlock.getPositionY()] >= 1))
+            {
+                isCurBlock = false; // 활성화된 블록 비활성화 -> 줄 완성되었는지 체크할 때 필요한데..? 여기서는 리턴만 하고 거기서 비활성화를 해야하나?
+                return true;
+            }
+            checkColumns.insert(yidx); // 해당 열은 검사했으니 같은 열의 윗칸들은 검사하지 않도록 함
+        }
+    }
+    
+    return false;
 }
 
 void TetrisLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
