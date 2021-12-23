@@ -4,11 +4,11 @@ namespace Constant
 {
     extern const int tetrisBlock[7][4][4][4];
 
-    extern const int down = 80;
-    extern const int left = 75;
-    extern const int right = 77;
-    extern const int up = 72;
+    const int down = 80;
+    const int left = 75;
+    const int right = 77;
+    const int up = 72;
 
-    extern const int mapWidth = 12;
-    extern const int mapHeight = 22;
+    const int mapWidth = 12;
+    const int mapHeight = 22;
 }
