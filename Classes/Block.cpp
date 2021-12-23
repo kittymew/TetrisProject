@@ -56,7 +56,7 @@ void Block::setBlock(int shape)
     pBlock = &Constant::tetrisBlock[shape][0];
 }
 
-Block::Block(int shape) : x(0), y(4), rotationCount(0)
+Block::Block(int shape) : x(0), y(Constant::mapWidth / 2 - 2), rotationCount(0)
 {
     pBlock = &Constant::tetrisBlock[shape][rotationCount];
 }

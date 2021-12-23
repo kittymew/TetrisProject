@@ -1,11 +1,7 @@
 #include "TetrisLayer.h"
+#include "ConstValue.h"
 
 using namespace cocos2d;
-
-const int down = 80;
-const int left = 75;
-const int right = 77;
-const int up = 72;
 
 Layer* TetrisLayer::create()
 {
@@ -70,7 +66,7 @@ void TetrisLayer::update(float dt)
         backupX = curBlock.getPositionX();
         backupY = curBlock.getPositionY();
         
-        bool moveDown = TetrisLayer::moveBlock(down);
+        bool moveDown = TetrisLayer::moveBlock(Constant::down);
         if(moveDown == false)
         {
             curBlock.setPositionX(backupX);
@@ -106,15 +102,15 @@ bool TetrisLayer::moveBlock(int key)
     TetrisLayer::clearBlock(curBlock.getPositionX(), curBlock.getPositionY());
     arrPt block = curBlock.getBlock();
     
-    if(key == down)
+    if(key == Constant::down)
     {
         curBlock.goDown();
     }
-    else if(key == left)
+    else if(key == Constant::left)
     {
         curBlock.goLeft();
     }
-    else if(key == right)
+    else if(key == Constant::right)
     {
         curBlock.goRight();
     }
@@ -136,7 +132,7 @@ bool TetrisLayer::moveBlock(int key)
             }
             if(board[xidx + curBlock.getPositionX()][yidx + curBlock.getPositionY()] >= 1) // 다른 블록과 겹친 상태, 이동 불가
             {
-                if(key == down) // 내려가서 겹친 경우 해당 블록 움직임 종료
+                if(key == Constant::down) // 내려가서 겹친 경우 해당 블록 움직임 종료
                 {
                     isCurBlock = false;
                 }
@@ -257,7 +253,7 @@ void TetrisLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
     }
     else if(keyCode == EventKeyboard::KeyCode::KEY_LEFT_ARROW)
     {
-        bool moveLeft = TetrisLayer::moveBlock(left);
+        bool moveLeft = TetrisLayer::moveBlock(Constant::left);
         if(moveLeft == false)
         {
             curBlock.setPositionX(backupX);
@@ -266,7 +262,7 @@ void TetrisLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
     }
     else if(keyCode == EventKeyboard::KeyCode::KEY_RIGHT_ARROW)
     {
-        bool moveRight = TetrisLayer::moveBlock(right);
+        bool moveRight = TetrisLayer::moveBlock(Constant::right);
         if(moveRight == false)
         {
             curBlock.setPositionX(backupX);
