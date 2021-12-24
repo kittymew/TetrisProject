@@ -13,7 +13,7 @@ private:
     Block curBlock;
     bool isCurBlock;
     int board[Constant::mapHeight][Constant::mapWidth];
-    int border;
+    cocos2d::Sprite* boardSprite[Constant::mapHeight][Constant::mapWidth];
     
 public:
     void update(float dt);
@@ -21,17 +21,18 @@ public:
     void gameEnd();
     
     void drawBlock();
-    void drawSprite(int x, int y);
+    void createSprite(int x, int y);
+    void changeSprite(int x, int y);
     void drawBoard();
     void clearBlock(int x, int y);
     
     bool isGround();
-    void addBlock();
     bool moveBlock(int key);
+    void addBlock();
     void rotateBlock();
+    void checkFullRow();
     int checkCollision();
     int getDirectionMaxCollision(); // 회전시 블록간 충돌을 위한 함수
-    void checkFullRow();
     
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
     

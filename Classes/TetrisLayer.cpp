@@ -27,11 +27,10 @@ bool TetrisLayer::init()
         return false;
     
     isCurBlock = false;
-    border = 2;
     
-    for(int x = 0; x < 22; ++x)
+    for(int x = 0; x < Constant::mapHeight; ++x)
     {
-        for(int y = 0; y < 12; ++y)
+        for(int y = 0; y < Constant::mapWidth; ++y)
         {
             board[x][y] = 0;
         }
@@ -300,7 +299,7 @@ void TetrisLayer::clearBlock(int x, int y)
             if(block[rotation][xidx - x][yidx - y] >= 1)
             {
                 board[xidx][yidx] = 0;
-                drawSprite(xidx, yidx);
+                changeSprite(xidx, yidx);
             }
         }
     }
@@ -323,7 +322,7 @@ void TetrisLayer::drawBlock()
             if(block[rotation][xidx - x][yidx - y] >= 1)
             {
                 board[xidx][yidx] = block[rotation][xidx - x][yidx - y];
-                drawSprite(xidx, yidx);
+                changeSprite(xidx, yidx);
             }
         }
     }
@@ -331,16 +330,16 @@ void TetrisLayer::drawBlock()
 
 void TetrisLayer::drawBoard()
 {
-    for(int x = 0; x < 22; ++x)
+    for(int x = 0; x < Constant::mapHeight; ++x)
     {
-        for(int y = 0; y < 12; ++y)
+        for(int y = 0; y < Constant::mapWidth; ++y)
         {
-            drawSprite(x, y);
+            createSprite(x, y);
         }
     }
 }
 
-void TetrisLayer::drawSprite(int x, int y)
+void TetrisLayer::createSprite(int x, int y)
 {
     if(x < 0 || x > Constant::mapHeight - 1)
         return;
@@ -348,6 +347,21 @@ void TetrisLayer::drawSprite(int x, int y)
         return;
     
     Sprite* sprite = Sprite::create("square_white.png");
+    
+    int originWidth = sprite->getContentSize().width;
+    int originHeight = sprite->getContentSize().height;
+    sprite->setScale((double)Constant::blockSize / (double)originWidth, (double)Constant::blockSize / (double)originHeight);
+    sprite->setAnchorPoint(Vec2(0, 0));
+    sprite->setPosition(Vec2(y * Constant::blockSize + Constant::blockGap,
+                             (Constant::mapHeight - x) * Constant::blockSize + Constant::blockGap));
+    this->addChild(sprite);
+    
+    boardSprite[x][y] = sprite;
+}
+
+void TetrisLayer::changeSprite(int x, int y)
+{
+    Sprite* sprite = boardSprite[x][y];
     switch(board[x][y])
     {
         case 1:
@@ -371,15 +385,10 @@ void TetrisLayer::drawSprite(int x, int y)
         case 7:
             sprite->setTexture("square_gray.png");
             break;
+        default:
+            sprite->setTexture("square_white.png");
+            break;
     }
-    
-    int originWidth = sprite->getContentSize().width;
-    int originHeight = sprite->getContentSize().height;
-    sprite->setScale((double)Constant::blockSize / (double)originWidth, (double)Constant::blockSize / (double)originHeight);
-    sprite->setAnchorPoint(Vec2(0, 0));
-    sprite->setPosition(Vec2(y * Constant::blockSize + Constant::blockGap,
-                             (Constant::mapHeight - x) * Constant::blockSize + Constant::blockGap));
-    this->addChild(sprite);
 }
 
 bool TetrisLayer::isGround()
@@ -462,7 +471,7 @@ void TetrisLayer::checkFullRow()
             for(int yidx = 0; yidx < Constant::mapWidth; ++yidx)
             {
                 board[xidx + downAmount][yidx] = board[xidx][yidx];
-                drawSprite(xidx + downAmount, yidx);
+                changeSprite(xidx + downAmount, yidx);
                 if(board[xidx][yidx] >= 1)
                 {
                     isBlankRow = false;
