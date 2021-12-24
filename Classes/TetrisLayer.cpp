@@ -47,7 +47,7 @@ bool TetrisLayer::init()
 
 void TetrisLayer::gameStart()
 {
-    _time = 1000;
+    _time = 1000; // test value
     schedule(CC_SCHEDULE_SELECTOR(TetrisLayer::update), Constant::speedDown);
 }
 
@@ -89,8 +89,20 @@ void TetrisLayer::gameEnd()
 
 void TetrisLayer::addBlock()
 {
+    // 게임오버 조건 : 새 블록이 생성될 수 있는지 체크
     int shape = RandomHelper::random_int(0, 6);
     curBlock = Block(shape);
+    arrPt block = curBlock.getBlock();
+    int rotation = curBlock.getRotationCount();
+    for(int y = 0; y < 4; ++y)
+    {
+        if(block[rotation][0][y] >= 1)
+            break;
+        if(y == 3)
+        {
+            curBlock.setPositionX(-1);
+        }
+    }
     isCurBlock = true;
 }
 
@@ -128,6 +140,7 @@ bool TetrisLayer::moveBlock(int key)
         case Constant::collision_lwall:
         case Constant::collision_rwall:
         case Constant::collision_block:
+        case Constant::collision_ceiling:
             curBlock.setPositionX(backupX);
             curBlock.setPositionY(backupY);
             return false;
@@ -165,6 +178,9 @@ void TetrisLayer::rotateBlock()
                 break;
             case Constant::collision_rwall:
                 curBlock.goLeft();
+                break;
+            case Constant::collision_ceiling:
+                curBlock.goDown();
                 break;
             case Constant::collision_block:
             {
@@ -276,7 +292,9 @@ int TetrisLayer::checkCollision()
                 continue;
             if(xidx + curBlock.getPositionX() > Constant::mapHeight - 1) // 바닥과 충돌
                 return Constant::collision_ground;
-            if(yidx + curBlock.getPositionY() > Constant::mapWidth - 1) // 벽면 충돌
+            if(xidx + curBlock.getPositionX() < 0) // 천장과 충돌
+                return Constant::collision_ceiling;
+            if(yidx + curBlock.getPositionY() > Constant::mapWidth - 1) // 벽과 충돌
                 return Constant::collision_rwall;
             if(yidx + curBlock.getPositionY() < 0)
                 return Constant::collision_lwall;
