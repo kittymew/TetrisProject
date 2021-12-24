@@ -61,12 +61,20 @@ void TetrisLayer::update(float dt)
     if(isCurBlock == false)
     {
         TetrisLayer::addBlock();
+        if(TetrisLayer::enableAddBlock() == false)
+        {
+            TetrisLayer::gameEnd();
+        }
         TetrisLayer::drawBlock();
     }
     else
     {
         if(TetrisLayer::isGround())
         {
+            if(TetrisLayer::enableGround() == false)
+            {
+                TetrisLayer::gameEnd();
+            }
             TetrisLayer::checkFullRow();
         }
         else
@@ -85,11 +93,12 @@ void TetrisLayer::update(float dt)
 void TetrisLayer::gameEnd()
 {
     unschedule(CC_SCHEDULE_SELECTOR(TetrisLayer::update)); // 스케줄러 중지
+    CCLOG("game end");
+    _eventDispatcher->removeAllEventListeners();
 }
 
 void TetrisLayer::addBlock()
 {
-    // 게임오버 조건 : 새 블록이 생성될 수 있는지 체크
     int shape = RandomHelper::random_int(0, 6);
     curBlock = Block(shape);
     arrPt block = curBlock.getBlock();
@@ -104,6 +113,60 @@ void TetrisLayer::addBlock()
         }
     }
     isCurBlock = true;
+}
+
+bool TetrisLayer::enableAddBlock()
+{
+    if(isCurBlock == false)
+    {
+        // 에러
+    }
+    
+    int x = curBlock.getPositionX();
+    int y = curBlock.getPositionY();
+    int rotation = curBlock.getRotationCount();
+    arrPt block = curBlock.getBlock();
+
+    for(int xidx = x; xidx < x+ 4; ++xidx)
+    {
+        for(int yidx = y; yidx < y + 4; ++yidx)
+        {
+            if(block[rotation][xidx - x][yidx - y] < 1)
+                continue;
+            if(board[xidx][yidx] >= 1)
+                return false;
+        }
+    }
+    
+    return true;
+}
+
+bool TetrisLayer::enableGround()
+{
+    if(isCurBlock == false)
+    {
+        // 에러
+    }
+    
+    int x = curBlock.getPositionX();
+    int y = curBlock.getPositionY();
+    int rotation = curBlock.getRotationCount();
+    arrPt block = curBlock.getBlock();
+
+    for(int xidx = x; xidx < x+ 4; ++xidx)
+    {
+        for(int yidx = y; yidx < y + 4; ++yidx)
+        {
+            if(block[rotation][xidx - x][yidx - y] < 1)
+                continue;
+            if(xidx - x < 0)
+                return false;
+            else
+                return true;
+        }
+    }
+    
+    return true;
 }
 
 bool TetrisLayer::moveBlock(int key)
@@ -282,23 +345,26 @@ int TetrisLayer::checkCollision()
     if(isCurBlock == false)
         return Constant::collision_error;
     
+    int x = curBlock.getPositionX();
+    int y = curBlock.getPositionY();
+    int rotation = curBlock.getRotationCount();
     arrPt block = curBlock.getBlock();
     
     for(int xidx = 0; xidx < 4; ++xidx)
     {
         for(int yidx = 0; yidx < 4; ++yidx)
         {
-            if(block[curBlock.getRotationCount()][xidx][yidx] <= 0) // 빈 공간이면 다음 칸 체크
+            if(block[rotation][xidx][yidx] <= 0) // 빈 공간이면 다음 칸 체크
                 continue;
-            if(xidx + curBlock.getPositionX() > Constant::mapHeight - 1) // 바닥과 충돌
+            if(xidx + x > Constant::mapHeight - 1) // 바닥과 충돌
                 return Constant::collision_ground;
-            if(xidx + curBlock.getPositionX() < 0) // 천장과 충돌
+            if(xidx + x < 0) // 천장과 충돌
                 return Constant::collision_ceiling;
-            if(yidx + curBlock.getPositionY() > Constant::mapWidth - 1) // 벽과 충돌
+            if(yidx + y > Constant::mapWidth - 1) // 벽과 충돌
                 return Constant::collision_rwall;
-            if(yidx + curBlock.getPositionY() < 0)
+            if(yidx + y < 0)
                 return Constant::collision_lwall;
-            if(board[xidx + curBlock.getPositionX()][yidx + curBlock.getPositionY()] >= 1) // 다른 블록과 겹친 상태
+            if(board[xidx + x][yidx + y] >= 1) // 다른 블록과 겹친 상태
                 return Constant::collision_block;
         }
     }
@@ -414,6 +480,9 @@ bool TetrisLayer::isGround()
     if(isCurBlock == false)
         return false; // FIXME 이곳에 걸리는 일이 없어야 정상(update 함수에서 확인함), 만약 걸린다면 에러 표시
     
+    int x = curBlock.getPositionX();
+    int y = curBlock.getPositionY();
+    int rotation = curBlock.getRotationCount();
     arrPt block = curBlock.getBlock();
     std::set<int> checkColumns;
     
@@ -423,11 +492,11 @@ bool TetrisLayer::isGround()
         {
             if(checkColumns.find(yidx) != checkColumns.end()) // 이미 검사한 열이라면 다음 칸 체크
                 continue;
-            if(block[curBlock.getRotationCount()][xidx][yidx] <= 0) // 빈 공간이면 다음 칸 체크
+            if(block[rotation][xidx][yidx] <= 0) // 빈 공간이면 다음 칸 체크
                 continue;
             
-            int nextX = xidx + curBlock.getPositionX() + 1;
-            if((nextX > Constant::mapHeight - 1) || (board[nextX][yidx + curBlock.getPositionY()] >= 1))
+            int nextX = xidx + x + 1;
+            if((nextX > Constant::mapHeight - 1) || (board[nextX][yidx + y] >= 1))
             {
                 return true;
             }
@@ -440,6 +509,9 @@ bool TetrisLayer::isGround()
 
 void TetrisLayer::checkFullRow()
 {
+    if(isCurBlock == false)
+        return;
+    
     int x = curBlock.getPositionX(); // 검사할 줄: x <= idx < x + 4
     isCurBlock = false; // 비활성화, 키 입력 등으로 움직이지 않도록
     int rowStatus[Constant::mapHeight];

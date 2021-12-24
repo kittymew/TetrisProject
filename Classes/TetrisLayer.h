@@ -27,6 +27,8 @@ public:
     void clearBlock(int x, int y);
     
     bool isGround();
+    bool enableAddBlock();
+    bool enableGround();
     bool moveBlock(int key);
     void addBlock();
     void rotateBlock();
