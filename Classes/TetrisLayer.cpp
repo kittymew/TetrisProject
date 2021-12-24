@@ -94,7 +94,6 @@ void TetrisLayer::update(float dt)
 void TetrisLayer::gameEnd()
 {
     unschedule(CC_SCHEDULE_SELECTOR(TetrisLayer::update)); // 스케줄러 중지
-    CCLOG("game end");
     _eventDispatcher->removeAllEventListeners();
     isCurBlock = false;
     
