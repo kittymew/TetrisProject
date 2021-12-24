@@ -3,14 +3,16 @@
 #include "cocos2d.h"
 
 #include "Block.h"
+#include "ConstValue.h"
 
 class TetrisLayer : public cocos2d::Layer
 {
 private:
     int _time;
+    int score;
     Block curBlock;
     bool isCurBlock;
-    int board[22][12];
+    int board[Constant::mapHeight][Constant::mapWidth];
     int border;
     
 public:
@@ -23,12 +25,13 @@ public:
     void drawBoard();
     void clearBlock(int x, int y);
     
+    bool isGround();
     void addBlock();
     bool moveBlock(int key);
     void rotateBlock();
     int checkCollision();
     int getDirectionMaxCollision(); // 회전시 블록간 충돌을 위한 함수
-    bool isGround();
+    void checkFullRow();
     
     void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);
     

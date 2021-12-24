@@ -49,7 +49,7 @@ bool TetrisLayer::init()
 void TetrisLayer::gameStart()
 {
     _time = 1000;
-    schedule(CC_SCHEDULE_SELECTOR(TetrisLayer::update), Constant::speedDown); // 1초마다 호출되는 스케줄러 시작
+    schedule(CC_SCHEDULE_SELECTOR(TetrisLayer::update), Constant::speedDown);
 }
 
 void TetrisLayer::update(float dt)
@@ -62,29 +62,20 @@ void TetrisLayer::update(float dt)
     if(isCurBlock == false)
     {
         TetrisLayer::addBlock();
+        TetrisLayer::drawBlock();
     }
     else
     {
         if(TetrisLayer::isGround())
         {
-            // 줄 완성되었는지 체크
-            // 한칸씩 아래로 내리기
+            TetrisLayer::checkFullRow();
         }
         else
         {
-            backupX = curBlock.getPositionX();
-            backupY = curBlock.getPositionY();
-            
             bool moveDown = TetrisLayer::moveBlock(Constant::down);
-            if(moveDown == false)
-            {
-                curBlock.setPositionX(backupX);
-                curBlock.setPositionY(backupY);
-            }
+            TetrisLayer::drawBlock();
         }
     }
-    
-    TetrisLayer::drawBlock();
 
     if(_time <= 0)
     {
@@ -106,6 +97,9 @@ void TetrisLayer::addBlock()
 
 bool TetrisLayer::moveBlock(int key)
 {
+    int backupX = curBlock.getPositionX();
+    int backupY = curBlock.getPositionY();
+    
     TetrisLayer::clearBlock(curBlock.getPositionX(), curBlock.getPositionY());
     arrPt block = curBlock.getBlock();
     
@@ -134,8 +128,9 @@ bool TetrisLayer::moveBlock(int key)
         case Constant::collision_ground:
         case Constant::collision_lwall:
         case Constant::collision_rwall:
-            return false;
         case Constant::collision_block:
+            curBlock.setPositionX(backupX);
+            curBlock.setPositionY(backupY);
             return false;
         case Constant::collision_error: // FIXME error 처리
         default:
@@ -295,13 +290,14 @@ int TetrisLayer::checkCollision()
 
 void TetrisLayer::clearBlock(int x, int y)
 {
+    int rotation = curBlock.getRotationCount();
     arrPt block = curBlock.getBlock();
     
     for(int xidx = x; xidx < x + 4; ++xidx)
     {
         for(int yidx = y; yidx < y + 4; ++yidx)
         {
-            if(block[curBlock.getRotationCount()][xidx - x][yidx - y] >= 1)
+            if(block[rotation][xidx - x][yidx - y] >= 1)
             {
                 board[xidx][yidx] = 0;
                 drawSprite(xidx, yidx);
@@ -312,17 +308,21 @@ void TetrisLayer::clearBlock(int x, int y)
 
 void TetrisLayer::drawBlock()
 {
+    if(isCurBlock == false)
+        return;
+    
     int x = curBlock.getPositionX();
     int y = curBlock.getPositionY();
+    int rotation = curBlock.getRotationCount();
     arrPt block = curBlock.getBlock();
     
     for(int xidx = x; xidx < x + 4; ++xidx)
     {
         for(int yidx = y; yidx < y + 4; ++yidx)
         {
-            if(block[curBlock.getRotationCount()][xidx - x][yidx - y] >= 1)
+            if(block[rotation][xidx - x][yidx - y] >= 1)
             {
-                board[xidx][yidx] = block[curBlock.getRotationCount()][xidx - x][yidx - y];
+                board[xidx][yidx] = block[rotation][xidx - x][yidx - y];
                 drawSprite(xidx, yidx);
             }
         }
@@ -402,7 +402,6 @@ bool TetrisLayer::isGround()
             int nextX = xidx + curBlock.getPositionX() + 1;
             if((nextX > Constant::mapHeight - 1) || (board[nextX][yidx + curBlock.getPositionY()] >= 1))
             {
-                isCurBlock = false; // 활성화된 블록 비활성화 -> 줄 완성되었는지 체크할 때 필요한데..? 여기서는 리턴만 하고 거기서 비활성화를 해야하나?
                 return true;
             }
             checkColumns.insert(yidx); // 해당 열은 검사했으니 같은 열의 윗칸들은 검사하지 않도록 함
@@ -412,13 +411,77 @@ bool TetrisLayer::isGround()
     return false;
 }
 
+void TetrisLayer::checkFullRow()
+{
+    int x = curBlock.getPositionX(); // 검사할 줄: x <= idx < x + 4
+    isCurBlock = false; // 비활성화, 키 입력 등으로 움직이지 않도록
+    int rowStatus[Constant::mapHeight];
+    for(int idx = 0; idx < Constant::mapHeight; ++idx)
+    {
+        rowStatus[idx] = 0;
+    }
+    
+    for(int xidx = x + 3; xidx >= x; --xidx)
+    {
+        if(xidx >= Constant::mapHeight)
+            continue;
+        if(xidx < 0)
+            break;
+        
+        for(int yidx = 0; yidx < Constant::mapWidth; ++yidx)
+        {
+            if(board[xidx][yidx] < 1)
+                break;
+            if(yidx == Constant::mapWidth - 1) // break에 걸리지 않고 끝까지 체크 되었으면 full
+            {
+                rowStatus[xidx] = 1;
+            }
+        }
+    }
+    
+    int downAmount = 0;
+    // x + 3부터 한 줄 씩 완성되었는지 탐색 후 옮긴다.
+    for(int xidx = x + 3; x >= 0; --xidx)
+    {
+        if(xidx >= Constant::mapHeight)
+            continue;
+        if(xidx < 0)
+            break;
+        
+        if(rowStatus[xidx] > 0)
+        {
+            ++downAmount;
+        }
+        else // 내리기
+        {
+            if(downAmount == 0)
+                continue;
+            
+            bool isBlankRow = true;
+            int blankRowCount = 0;
+            for(int yidx = 0; yidx < Constant::mapWidth; ++yidx)
+            {
+                board[xidx + downAmount][yidx] = board[xidx][yidx];
+                drawSprite(xidx + downAmount, yidx);
+                if(board[xidx][yidx] >= 1)
+                {
+                    isBlankRow = false;
+                }
+            }
+            if(isBlankRow == true)
+            {
+                ++blankRowCount;
+                if(blankRowCount >= downAmount)
+                    break;
+            }
+        }
+    }
+}
+
 void TetrisLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
 {
     if(isCurBlock == false)
         return;
-    
-    int backupX = curBlock.getPositionX();
-    int backupY = curBlock.getPositionY();
     
     if(keyCode == EventKeyboard::KeyCode::KEY_UP_ARROW)
     {
@@ -427,20 +490,12 @@ void TetrisLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event)
     else if(keyCode == EventKeyboard::KeyCode::KEY_LEFT_ARROW)
     {
         bool moveLeft = TetrisLayer::moveBlock(Constant::left);
-        if(moveLeft == false)
-        {
-            curBlock.setPositionX(backupX);
-            curBlock.setPositionY(backupY);
-        }
+        drawBlock();
     }
     else if(keyCode == EventKeyboard::KeyCode::KEY_RIGHT_ARROW)
     {
         bool moveRight = TetrisLayer::moveBlock(Constant::right);
-        if(moveRight == false)
-        {
-            curBlock.setPositionX(backupX);
-            curBlock.setPositionY(backupY);
-        }
+        drawBlock();
     }
     else if(keyCode == EventKeyboard::KeyCode::KEY_DOWN_ARROW)
     {
