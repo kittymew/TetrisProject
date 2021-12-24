@@ -2,6 +2,7 @@
 
 #include "TetrisLayer.h"
 #include "ConstValue.h"
+#include "GameoverLayer.h"
 
 using namespace cocos2d;
 
@@ -95,6 +96,15 @@ void TetrisLayer::gameEnd()
     unschedule(CC_SCHEDULE_SELECTOR(TetrisLayer::update)); // 스케줄러 중지
     CCLOG("game end");
     _eventDispatcher->removeAllEventListeners();
+    isCurBlock = false;
+    
+    Layer* layer = GameoverLayer::create();
+    Scene* scene = Director::getInstance()->getRunningScene();
+    if(scene != nullptr)
+    {
+        scene->removeAllChildren();
+        scene->addChild(layer);
+    }
 }
 
 void TetrisLayer::addBlock()

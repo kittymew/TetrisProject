@@ -9,7 +9,7 @@ class TetrisLayer : public cocos2d::Layer
 {
 private:
     int _time;
-    int score;
+    int score; // not using
     Block curBlock;
     bool isCurBlock;
     int board[Constant::mapHeight][Constant::mapWidth];
